@@ -1,0 +1,181 @@
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.*;
+
+
+int rectChecked=0;
+float xOffset;
+float yOffset;
+ConcurrentMap rectList = new ConcurrentHashMap();
+Set st = rectList.entrySet();
+
+int rectCount=1;
+
+void setup()
+{
+  size(600,600);
+  //frameRate(30);
+  drawToolbox();
+  rectList.put(rectCount++,new Rectangle(420,20,60,55,false));
+  
+}
+
+void draw()
+{
+  background(255);
+  fill(255);
+  drawToolbox();
+  
+  
+  //To change the default cursor to arrow
+  cursor(ARROW);
+  Iterator it = st.iterator();
+  //This iterates through all objects in rectangle map
+  while(it.hasNext()){
+    Map.Entry me = (Map.Entry)it.next();
+    Rectangle rectObj = (Rectangle)me.getValue();
+    int keyValue = (Integer)me.getKey();
+    //This if displays only the rectangle which are selected
+    if(rectObj.locked){
+      fill(153);
+      rect(rectObj.xCoordinate,rectObj.yCoordinate,rectObj.wide,rectObj.tall);
+      /*if(mouseX==rectObj.xCoordinate && mouseY>=rectObj.yCoordinate && mouseY<=rectObj.yCoordinate+rectObj.wide){
+        cursor(MOVE);
+        
+        
+       }*/
+    }
+    //This displays the rectangle which are not selected
+    else{
+      fill(255);
+      rect(rectObj.xCoordinate,rectObj.yCoordinate,rectObj.wide,rectObj.tall);
+    }
+    
+    
+  }
+  
+  
+}
+
+void mousePressed()
+{
+  if(mouseButton==LEFT)
+  {
+    Iterator it = st.iterator();
+    while(it.hasNext())
+    {
+      
+      Map.Entry me = (Map.Entry)it.next();
+      Rectangle rectObj = (Rectangle)me.getValue();
+      int keyValue = (Integer)me.getKey();
+      
+      if(mouseX>=rectObj.xCoordinate && mouseX<=rectObj.xCoordinate+rectObj.wide && mouseY>=rectObj.yCoordinate && mouseY<=rectObj.yCoordinate+rectObj.tall)
+      {
+        if(keyValue==1)
+        {
+          rectList.put(rectCount++,new Rectangle(15, 300, 60,55,false));
+        }
+        else{
+          it.remove();
+          rectList.put(keyValue,new Rectangle(rectObj.xCoordinate,rectObj.yCoordinate,rectObj.wide,rectObj.tall,true));
+          xOffset = mouseX - rectObj.xCoordinate;
+          yOffset = mouseY - rectObj.yCoordinate;
+        }
+      }
+      else{
+        //Check if the mouse coordinates are in toolbox if yes don't change the state of the object
+          if(mouseX>=400 && mouseX<=600 && mouseY>=0 && mouseY<=600)
+          {
+            it.remove();
+            rectList.put(keyValue,new Rectangle(rectObj.xCoordinate,rectObj.yCoordinate,rectObj.wide,rectObj.tall,rectObj.locked));
+          }
+          else{
+          it.remove();
+          rectList.put(keyValue,new Rectangle(rectObj.xCoordinate,rectObj.yCoordinate,rectObj.wide,rectObj.tall,false));
+          }
+      }
+    }
+    
+    //Code to check if the scale button has been pressed or not
+    Iterator it1 = st.iterator();
+    if(mouseX>=420 && mouseX<=480 && mouseY>=100 && mouseY<=120){
+      // now if the scale button is checked scale the selected image by 1%
+      System.out.println("inside mouse scale button");
+      while(it1.hasNext()){
+        Map.Entry me = (Map.Entry)it1.next();
+        Rectangle rectObj = (Rectangle)me.getValue();
+        int keyValue = (Integer)me.getKey();
+        if(rectObj.locked){
+          it1.remove();
+          rectList.put(keyValue,scaleObj(rectObj.xCoordinate,rectObj.yCoordinate,rectObj.wide,rectObj.tall,true));
+        }
+      }
+    }
+  }
+}
+
+void mouseDragged()
+{
+  Iterator it = st.iterator();
+  while(it.hasNext()){
+      Map.Entry me = (Map.Entry)it.next();
+      Rectangle rectObj = (Rectangle)me.getValue();
+      int keyValue = (Integer)me.getKey();
+      if(rectObj.locked){
+        float newX = mouseX - xOffset;
+        float newY = mouseY - yOffset;
+        it.remove();
+        rectList.put(keyValue,new Rectangle(newX,newY,rectObj.wide,rectObj.tall,true));
+        
+      }
+  }
+}
+
+/*void mouseReleased(){
+  Iterator it = st.iterator();
+  while(it.hasNext()){
+    Map.Entry me = (Map.Entry)it.next();
+    Rectangle rectObj = (Rectangle)me.getValue();
+    int keyValue = (Integer)me.getKey();
+    if(rectObj.locked){
+      it.remove();
+      rectList.put(keyValue,new Rectangle(rectObj.xCoordinate,rectObj.yCoordinate,rectObj.wide,rectObj.tall,false));
+      
+    }
+  }
+}*/
+
+Rectangle scaleObj(float xValue,float yValue,float wide,float tall,boolean flag)
+{
+  float x1,x2,x3,x4,y1,y2,y3,y4;
+  
+  x1 = 0.01 * xValue + xValue;
+  y1 = 0.01 * yValue + yValue;
+  x2 = (xValue + wide)*0.01 + (xValue + wide);
+  y2 = 0.01 * yValue + yValue;
+  x3 = 0.01 * xValue + xValue;
+  y3 = (yValue + tall)*0.01 + (yValue + tall);
+  x4 = (xValue + wide)*0.01 + (xValue + wide);
+  y4 = (yValue + tall)*0.01 + (yValue + tall);
+  return new Rectangle(x1,y1,x2-x1,y4-y2,flag);
+  
+}
+
+//Code to draw the tool box area.
+void drawToolbox()
+{
+  //fill the color for the tool options to white
+  fill(255);
+  //This creates the tool box area of 400 X 600
+  rect(400,0,200,600);
+  //This creates a rectangle as a button on the tool box.
+  rect(420,20,60,55);
+  //This creates the button for scale
+  rect(420,100,60,20);
+  fill(0);
+  text("S",450,110);
+  
+  //This creates a circle in the tool box whose on click spawns
+  
+}
